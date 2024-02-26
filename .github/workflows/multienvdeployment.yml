@@ -6,20 +6,40 @@ on:
       - main
 
 jobs:
-  deploy_environment_1:
-    name: Deploy to Environment 1
+  list_jobs:
+    name: List Jobs
     runs-on: ubuntu-latest
-    environment:
-      name: environment1
     steps:
-      - name: Trigger Environment 1 Deployment
-        run: echo "Deploying to Environment 1"
+      - name: List Job Files
+        id: list_jobs
+        run: |
+          JOBS_DIR=.github/workflows/tenants/jobs
+          echo "::set-output name=jobs::$(ls $JOBS_DIR/*.yaml | xargs -n1 basename)"
+  # This job lists the files in the specified directory and outputs their filenames.
 
-  deploy_environment_2:
-    name: Deploy to Environment 2
+  deploy_environments:
+    name: Deploy Environments
     runs-on: ubuntu-latest
-    environment:
-      name: environment2
+    needs: list_jobs
     steps:
-      - name: Trigger Environment 2 Deployment
-        run: echo "Deploying to Environment 2"
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Environment Variables
+        run: |
+          JOBS_DIR=.github/workflows/tenants/jobs
+          JOBS=$(echo "${{ needs.list_jobs.outputs.jobs }}" | tr '\n' ' ')
+          echo "::set-env name=JOBS::$JOBS"
+
+      - name: Loop Over Jobs
+        run: |
+          JOBS=($JOBS)
+          for JOB in "${JOBS[@]}"; do
+            echo "Triggering deployment for job $JOB"
+            JOB_ID=$(basename "$JOB" .yaml)
+            echo "::set-output name=job_id::$JOB_ID"
+            # Trigger the respective job here.
+            # Example:
+            # echo "Triggering job $JOB_ID"
+            # gh workflow run "$JOB_ID.yaml"
+          done
