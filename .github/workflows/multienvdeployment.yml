@@ -1,0 +1,27 @@
+name: Multi-Environment Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_environment_1:
+    name: Deploy to Environment 1
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    environment:
+      name: environment1
+    steps:
+      - name: Trigger Environment 1 Deployment
+        run: echo "Deploying to Environment 1"
+
+  deploy_environment_2:
+    name: Deploy to Environment 2
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    environment:
+      name: environment2
+    steps:
+      - name: Trigger Environment 2 Deployment
+        run: echo "Deploying to Environment 2"
